@@ -24,6 +24,8 @@
   <ItemGroup>
     <Compile Include="board.py" />
     <Compile Include="colors.py" />
+    <Compile Include="disjoint_set.py" />
+    <Compile Include="player.py" />
     <Compile Include="python_game.py" />
   </ItemGroup>
   <ItemGroup>
