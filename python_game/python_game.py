@@ -5,8 +5,40 @@ import colors
 from pygame.math import Vector2
 import math
 
+pygame.font.init()
+score_font = pygame.font.SysFont(None, 36)
+
+def draw_scoreboard(screen, font, p1_score, p2_score):
+    text = f"P1: {p1_score}   |   P2: {p2_score}"
+    surface = font.render(text, True, colors.BLACK)
+    rect = surface.get_rect()
+    # place near the top-left of the window
+    rect.topleft = (20, 20)
+    screen.blit(surface, rect)
+
+def draw_winner_message(screen, font, winner_index):
+    # winner_index: 1 or 2 (or any number you use for players)
+    text = f"Player {winner_index} wins"
+    surface = font.render(text, True, colors.BLACK)
+
+    rect = surface.get_rect()
+    # center at the top of the screen
+    screen_width, _ = screen.get_size()
+    rect.midtop = (screen_width // 2, screen_width//2)
+
+    screen.blit(surface, rect)
+
+
+# projectile with player collision detection
+def circle_hit(ax, ay, ar, bx, by, br):
+    dx = ax - bx
+    dy = ay - by
+    r_sum = ar + br
+    return dx * dx + dy * dy <= r_sum * r_sum
+
+
 # moves the player and checks for collisions
-def move_with_collisions(pos, vel, d, wall_rects, radius):
+def move_with_collisions(pos, vel, dt, wall_rects, radius):
     new_pos = Vector2(pos)
 
     # move in x direction and check x direction
@@ -47,8 +79,12 @@ WIDTH, HEIGHT = 1280, 720
 
 # define game board
 game_board = GameBoard(WIDTH, HEIGHT)
-player1 = Player(460, 220, colors.BLACK)
-player2 = Player(500, 500, colors.RED)
+p1_dx = 420
+p1_dy = 460
+p2_dx = 620
+p2_dy = 460
+player1 = Player(p1_dx, p1_dy, colors.BLACK)
+player2 = Player(p2_dx, p2_dy, colors.RED)
 
 
 # create the display surface (window)
@@ -73,6 +109,11 @@ clock = pygame.time.Clock()
 
 # game loop
 running = True
+
+p1_points = 0
+p2_points = 0
+
+win_score = 3
 
 while running:
     # event handling
@@ -227,7 +268,58 @@ while running:
     # draw player 2 and all of its components
     player2.draw(screen, dt, game_board.wall_rects)
 
+    if player2.alive:
+        for proj in player1.projectiles:
+            if proj.alive and circle_hit(
+                proj.x, proj.y, proj.r,
+                player2.x, player2.y, player2.r
+            ):
+                proj.alive = False
+                player2.alive = False
 
+                p1_points+=1
+                player1.projectiles = []
+                player2.projectiles = []
+
+                player1.x = p1_dx
+                player1.y = p1_dy
+
+                player2.x = p2_dx
+                player2.y = p2_dy
+
+                player2.alive = True
+
+                break
+
+    if player1.alive:
+        for proj in player2.projectiles:
+            if proj.alive and circle_hit(
+                proj.x, proj.y, proj.r,
+                player1.x, player1.y, player1.r
+            ):
+                proj.alive = False
+                player1.alive = False
+
+                p2_points+=1
+                player1.projectiles = []
+                player2.projectiles = []
+                
+                player1.x = p1_dx
+                player1.y = p1_dy
+
+                player2.x = p2_dx
+                player2.y = p2_dy
+
+                player1.alive = True
+
+                break
+
+    draw_scoreboard(screen, score_font, p1_points, p2_points)
+
+    if(p1_points == win_score):
+        draw_winner_message(screen, score_font, 1)
+    if(p2_points == win_score):
+        draw_winner_message(screen, score_font, 2)
 
 
 
