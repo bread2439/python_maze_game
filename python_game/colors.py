@@ -1,5 +1,4 @@
-
-
+# available colors
 WHITE = (255, 255, 255)
 GREY  = (130, 130, 130)
 BLACK = (0,   0,   0)
