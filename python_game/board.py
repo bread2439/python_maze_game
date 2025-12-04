@@ -30,6 +30,9 @@ class GameBoard:
         self.board = self.__build_board()
         self.border = self.__build_border()
         self.grid = self.__gen_maze()
+
+        self.wall_thickness = 6
+        self.wall_rects = self.__build_wall_rects()
            
 
     def __compute_units(self):
@@ -50,6 +53,56 @@ class GameBoard:
         self.border_width  = self.board_width + self.border_offset * 2
         self.border_height = self.board_height + self.border_offset * 2
         return pygame.Rect(self.border_x, self.border_y, self.border_width, self.border_height) 
+
+    def __build_wall_rects(self):
+        n = int(self.n_units)
+        walls = []
+
+        t = self.wall_thickness
+        half_t = t / 2.0
+
+        for y in range(n):
+            for x in range(n):
+                cell = self.grid[y][x]
+                px = x * self.unit_size + self.board_x
+                py = y * self.unit_size + self.board_y
+
+                # For collision, we build a small rectangle where the line is drawn.
+
+                # North wall (top edge of cell)
+                if not cell['N']:
+                    rect = pygame.Rect(px,
+                                       py - half_t,
+                                       self.unit_size,
+                                       t)
+                    walls.append(rect)
+
+                # West wall (left edge of cell)
+                if not cell['W']:
+                    rect = pygame.Rect(px - half_t,
+                                       py,
+                                       t,
+                                       self.unit_size)
+                    walls.append(rect)
+
+                # South wall: only on bottom row, like your draw()
+                if y == n - 1 and not cell['S']:
+                    rect = pygame.Rect(px,
+                                       py + self.unit_size - half_t,
+                                       self.unit_size,
+                                       t)
+                    walls.append(rect)
+
+                # East wall: only on rightmost column
+                if x == n - 1 and not cell['E']:
+                    rect = pygame.Rect(px + self.unit_size - half_t,
+                                       py,
+                                       t,
+                                       self.unit_size)
+                    walls.append(rect)
+
+        return walls
+
 
     def draw(self, screen):
         pygame.draw.rect(screen, BOARD_BORDER_COLOR, self.border)
